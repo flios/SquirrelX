@@ -1,8 +1,9 @@
 from nltk.sentiment.vader import SentimentIntensityAnalyzer as SIA
 import pandas as pd
-import get_data
+from get_data import get_tweet_from_tweetwise
+import timeit
 
-def get_sentiment_for_tweets(tweets_df):
+def get_sentiment_from_tweets(tweets_df, save_result = False, output_file=None):
 
     sia = SIA()
     tw_sentiment = pd.Series(index = tweets_df.index)
@@ -12,13 +13,28 @@ def get_sentiment_for_tweets(tweets_df):
     tweets_df = tweets_df.assign(sentiment = tw_sentiment)
 
     tweets_sentiment_df = tweets_df.reindex(columns=['create at','sentiment'])
+
+    if save_result:
+        if output_file == None:
+            output_file = 'Data/sentiment'
+        tweets_sentiment_df.to_json(output_file)
+
     return tweets_sentiment_df
 
+def get_sentiment_from_file(input_file=None):
+    if input_file == None:
+        input_file = 'Data/sentiment'
+    tweets_sentiment_df = pd.read_json(input_file)
+    return tweets_sentiment_df
 
 if __name__ == '__main__':
-    tweets_df = get_data.get_tweet_from_tweetwise()
-    test = get_sentiment_for_tweets(tweets_df[0:10])
-    print test
+    tweets_df = get_tweet_from_tweetwise()
+    start = timeit.default_number()
+    test = get_sentiment_from_tweets(tweets_df, save_result= True)
+    end = timeit.default_number()
+    test2 = get_sentiment_from_file()
+    print end - start
+    # print test, test2
 
 
 
