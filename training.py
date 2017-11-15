@@ -1,6 +1,6 @@
 from get_data import get_bitcoin_price_from_tweetwise, get_tweet_from_tweetwise
 from sentiment import get_sentiment_from_tweets, get_sentiment_from_file
-from features import get_time_hist_features,read_label_from_file, read_features_from_file
+from features import get_time_hist_features,load_label_from_file, load_features_from_file
 import pandas as pd
 import numpy as np
 from sklearn.ensemble import RandomForestClassifier
@@ -14,8 +14,8 @@ if __name__ == '__main__':
     # price_df = get_bitcoin_price_from_tweetwise()
     print 'start to get feature'
     # features_list, label_list = get_time_hist_features(senti_tweet_df, price_df)
-    features_list = read_features_from_file()
-    label_list = read_label_from_file()
+    features_list = load_features_from_file('Features/feature_single_value')
+    label_list = load_label_from_file()
     train_ratio = 0.7
     train_num = int(len(label_list) * 0.7)
     train_set_feature_list , train_set_label_list = features_list[:train_num],label_list[:train_num]
@@ -25,9 +25,9 @@ if __name__ == '__main__':
         print train_num
         clf = RandomForestClassifier(n_estimators=100)
         clf = clf.fit(train_set_feature_list,train_set_label_list)
-        joblib.dump(clf, 'rf.pkl')
+        joblib.dump(clf, 'rf_single_value.pkl')
     else:
-        clf = joblib.load('rf.pkl')
+        clf = joblib.load('rf_single_value.pkl')
 
     result = clf.predict(test_set_feature_list)
     result_arr = np.array(result)
