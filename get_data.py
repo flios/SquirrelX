@@ -33,9 +33,23 @@ def get_bitcoin_price_from_tweetwise(fin = None):
     price_df = price_df.assign(time = price_time)
     return price_df
 
+def get_tweet_from_jsons(json_list):
+    key_list=['created_at','text','tweets']
+    buff_dict = {k:[] for k in key_list}
+    for json_obj in json_list:
+        data_dict = json.loads(json_obj)
+        for k in (set(data_dict) & set(key_list)):
+            buff_dict[k].append(data_dict[k])
+    tweet_df = pd.DataFrame({k:buff_dict[k] for k in buff_dict if len(buff_dict[k]) > 0 })
+    return tweet_df
+
+
+
 
 if __name__ == '__main__':
-    test = get_bitcoin_price_from_tweetwise()
-    print test
+    with open('Data/20171115212359.json') as ifile:
+        json_list = list(ifile)
+        tweet_df = get_tweet_from_jsons(json_list)
+    print(tweet_df)
 
 
