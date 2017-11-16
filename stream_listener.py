@@ -36,8 +36,12 @@ class DataWriter:
         #     self.writting_thread.join()
 
 class SquirrelStreamListener(tweepy.StreamListener):
-    def __init__(self):
-        self.data_writer = DataWriter()
+    def __init__(self, buff_queue = None):
+        if buff_queue == None:
+            self.data_writer = DataWriter()
+            self.buff_q = self.data_writer.buff_q
+        else:
+            self.buff_q = buff_queue
         super(SquirrelStreamListener, self).__init__()
     def on_data(self, raw_data):
         """Called when raw data is received from connection.
@@ -48,10 +52,11 @@ class SquirrelStreamListener(tweepy.StreamListener):
         data = json.loads(raw_data)
 
         if 'in_reply_to_status_id' in data:
-            # status = Status.parse(self.api, data)
-            # if self.on_status(status) is False:
-            #     return False
-            self.data_writer.buff_q.put(raw_data)
+            status = Status.parse(self.api, data)
+            if self.on_status(status) is False:
+                return False
+            self.buff_q.put(raw_data)
+            # print self.buff_q.qsize()
             # print data
         elif 'delete' in data:
             delete = data['delete']['status']
@@ -79,17 +84,27 @@ class SquirrelStreamListener(tweepy.StreamListener):
                 return False
         else:
             logging.error("Unknown message type: " + str(raw_data))
-
+    def on_status(self,status):
+        # print status.text
+        pass
 
 if __name__ == '__main__':
     import twitter_setup
-
+    test_que = Queue.Queue()
     my_api = twitter_setup.twitter_setup()
-    my_listener = SquirrelStreamListener()
+    my_listener = SquirrelStreamListener(test_que)
     my_stream = tweepy.Stream(auth=my_api.auth, listener=my_listener)
     my_stream.filter(track=['bitcoin', 'btc'], languages=['en'], async=True)
-    my_listener.data_writer.running(100)
+    # my_listener.data_writer.running(100)
 
-    time.sleep(100)
+    time.sleep(10)
+    tweet_num = test_que.qsize()
+    for i in range(tweet_num):
+        raw_data = test_que.get()
+        temp_df = pd.read_json(raw_data)
+        print temp_df
+
+
     my_stream.disconnect()
-    my_listener.data_writer.stop()
+    # my_listener.data_writer.stop()
+    print test_que.qsize()
