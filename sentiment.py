@@ -7,8 +7,14 @@ def get_sentiment_from_tweets(tweets_df, save_result = False, output_file=None):
 
     sia = SIA()
     tw_sentiment = pd.Series(index = tweets_df.index)
+    if 'text' in tweets_df:
+        tweet_label = 'text'
+    elif 'tweets' in tweets_df:
+        tweet_label = 'tweets'
+    else:
+        tweet_label = 'tweet'
     for idx in tweets_df.index:
-        tw_sentiment[idx] = sia.polarity_scores(tweets_df.loc[idx,'tweets'])['compound']
+        tw_sentiment[idx] = sia.polarity_scores(tweets_df.loc[idx,tweet_label])['compound']
     # tweets_df.loc[:,'sentiment'] = tw_sentiment
     tweets_df = tweets_df.assign(sentiment = tw_sentiment)
 
