@@ -1,5 +1,5 @@
 import tweepy
-import Queue
+import queue
 import datetime
 import json
 import numpy as np
@@ -9,15 +9,17 @@ import time
 from tweepy import Status
 import logging
 
+
 class DataWriter:
     def __init__(self):
-        self.buff_q = Queue.Queue()
+        self.buff_q = queue.Queue()
         self.is_running = False
-    def save_data(self, limit_num = 100):
+
+    def save_data(self, limit_num=100):
         while self.is_running:
             if self.buff_q.qsize() > (limit_num + 10):
                 filename = datetime.datetime.now().strftime('%Y%m%d%H%M%S') + ".json"
-                with open(filename,'w') as output_file:
+                with open(filename, 'w') as output_file:
                     for i in range(limit_num):
                         raw_data = self.buff_q.get()
                         output_file.write(raw_data)
@@ -28,21 +30,23 @@ class DataWriter:
             self.writting_thread = threading.Thread(target=self.save_data, args=(limit_num,))
             self.writting_thread.start()
         else:
-            print "Writer is running!"
+            print("Writer is running!")
 
     def stop(self):
         self.is_running = False
         # while self.writting_thread.is_alive():
         #     self.writting_thread.join()
 
+
 class SquirrelStreamListener(tweepy.StreamListener):
-    def __init__(self, buff_queue = None):
-        if buff_queue == None:
+    def __init__(self, buff_queue=None):
+        if buff_queue is None:
             self.data_writer = DataWriter()
             self.buff_q = self.data_writer.buff_q
         else:
             self.buff_q = buff_queue
         super(SquirrelStreamListener, self).__init__()
+
     def on_data(self, raw_data):
         """Called when raw data is received from connection.
 
@@ -84,13 +88,15 @@ class SquirrelStreamListener(tweepy.StreamListener):
                 return False
         else:
             logging.error("Unknown message type: " + str(raw_data))
-    def on_status(self,status):
+
+    def on_status(self, status):
         # print status.text
         pass
 
+
 if __name__ == '__main__':
     import twitter_setup
-    test_que = Queue.Queue()
+    test_que = queue.Queue()
     my_api = twitter_setup.twitter_setup()
     my_listener = SquirrelStreamListener(test_que)
     my_stream = tweepy.Stream(auth=my_api.auth, listener=my_listener)
@@ -102,9 +108,8 @@ if __name__ == '__main__':
     for i in range(tweet_num):
         raw_data = test_que.get()
         temp_df = pd.read_json(raw_data)
-        print temp_df
-
+        print(temp_df)
 
     my_stream.disconnect()
     # my_listener.data_writer.stop()
-    print test_que.qsize()
+    print(test_que.qsize())
